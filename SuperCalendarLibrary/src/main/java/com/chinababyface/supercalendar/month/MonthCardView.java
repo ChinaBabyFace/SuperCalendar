@@ -21,18 +21,20 @@ public abstract class MonthCardView<T extends BaseDayCell> extends View {
 
     protected static final int TOTAL_COL = 7; // 7列
     protected static final int TOTAL_ROW = 6; // 6行
+    protected MonthDayRow<T> rows[] = new MonthDayRow[TOTAL_ROW];
     private int cardViewWidth;
     private int cellSize;
     private int touchSlop;
     private float touchDownX;
     private float touchDownY;
     private Calendar currentCalendar;
-    protected MonthDayRow<T> rows[] = new MonthDayRow[TOTAL_ROW];
     private OnDayCellClickedListener onDayCellClickedListener;
+
     public MonthCardView(Context context, AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
         init(context);
     }
+
     public MonthCardView(Context context, AttributeSet attrs) {
         super(context, attrs);
         init(context);
@@ -54,47 +56,58 @@ public abstract class MonthCardView<T extends BaseDayCell> extends View {
 
     private void init(Context context) {
         touchSlop = ViewConfiguration.get(context).getScaledTouchSlop();
-        initDate();
     }
 
-    private void initDate() {
-    }
+    public abstract T getDayCell(Calendar date, int r, int c, float cellSize);
 
-    public abstract void fillDate();
-    //    {
-    //        Calendar currentMonthCalendar = Calendar.getInstance();
-    //        currentMonthCalendar.set(Calendar.DAY_OF_MONTH, 1);
-    //        Calendar lastMonthCalendar = (Calendar) currentMonthCalendar.clone();
-    //        lastMonthCalendar.add(Calendar.MONTH, -1);
-    //        int todayOfMonth = currentMonthCalendar.get(Calendar.DAY_OF_MONTH);
-    //        int lastMonthDayCount = lastMonthCalendar.getActualMaximum(Calendar.DAY_OF_MONTH);
-    //        int currentMonthDayCount = currentMonthCalendar.getActualMaximum(Calendar.DAY_OF_MONTH);
-    //        int firstDayWeek = currentMonthCalendar.getActualMinimum(Calendar.DAY_OF_WEEK);
-    //
-    //        int day = 0;
-    //        for (int row = 0; row < TOTAL_ROW; row++) {
-    //            rows[row] = new MonthDayRow(row, TOTAL_COL);
-    //            for (int col = 0; col < TOTAL_COL; col++) {
-    //                int position = col + row * TOTAL_COL; // 单元格位置
-    //                if (position >= firstDayWeek && position < firstDayWeek + currentMonthDayCount) {
-    //                    //设置本月的日数据
-    //                    day++;
-    //                    currentMonthCalendar.set(Calendar.DAY_OF_MONTH, day);
-    //                    rows[row].cellArray[col] = new DayCell((Calendar) (currentMonthCalendar.clone()), getDataList().get(position), row, col, cellSize);
-    //
-    //                } else if (position < firstDayWeek) {
-    //                    //设置上一个月的数据
-    //                    rows[row].cells[col] = new CalendarCell(new CustomDate(mShowDate.year, mShowDate.month - 1, lastMonthDays - (firstDayWeek - position - 1)),
-    //                            CellState.PAST_MONTH_DAY, col, row, cellSize);
-    //                } else if (position >= firstDayWeek + currentMonthDays) {
-    //                    //设置看下一个月的数据
-    //                    rows[row].cells[col] = new CalendarCell(
-    //                            (new CustomDate(mShowDate.year, mShowDate.month + 1, position - firstDayWeek - currentMonthDays + 1)),
-    //                            CellState.NEXT_MONTH_DAY, col, row, cellSize);
-    //                }
-    //            }
-    //        }
-    //    }
+    public abstract MonthDayRow<T> getRow(int row, int colNum);
+
+    public void fillDate() {
+        Calendar currentMonthCalendar = getCurrentCalendar();
+        currentMonthCalendar.set(Calendar.DAY_OF_MONTH, 1);
+        Calendar lastMonthCalendar = (Calendar) currentMonthCalendar.clone();
+        lastMonthCalendar.add(Calendar.MONTH, -1);
+        Calendar nextMonthCalendar = (Calendar) currentMonthCalendar.clone();
+        nextMonthCalendar.add(Calendar.MONTH, 1);
+        int todayOfMonth = currentMonthCalendar.get(Calendar.DAY_OF_MONTH);
+        int lastMonthDayCount = lastMonthCalendar.getActualMaximum(Calendar.DAY_OF_MONTH);
+        int currentMonthDayCount = currentMonthCalendar.getActualMaximum(Calendar.DAY_OF_MONTH);
+        int firstDayWeek = currentMonthCalendar.get(Calendar.DAY_OF_WEEK) - 1;
+        int day = 0;
+
+        for (int row = 0; row < TOTAL_ROW; row++) {
+            rows[row] = getRow(row, TOTAL_COL);
+            for (int col = 0; col < TOTAL_COL; col++) {
+                int position = col + row * TOTAL_COL; // 单元格位置
+                if (position >= firstDayWeek && position < firstDayWeek + currentMonthDayCount) {
+                    //设置本月的日数据
+                    day++;
+                    currentMonthCalendar.set(Calendar.DAY_OF_MONTH, day);
+                    rows[row].cellArray[col] = getDayCell(
+                            (Calendar) (currentMonthCalendar.clone()),
+                            row,
+                            col,
+                            getCellSize());
+                } else if (position < firstDayWeek) {
+                    //设置上一个月的数据
+                    lastMonthCalendar.set(Calendar.DAY_OF_MONTH, lastMonthDayCount - (firstDayWeek - position - 1));
+                    rows[row].cellArray[col] = getDayCell(
+                            (Calendar) lastMonthCalendar.clone(),
+                            row,
+                            col,
+                            getCellSize());
+                } else if (position >= firstDayWeek + currentMonthDayCount) {
+                    //设置看下一个月的数据
+                    nextMonthCalendar.set(Calendar.DAY_OF_MONTH, position - firstDayWeek - currentMonthDayCount + 1);
+                    rows[row].cellArray[col] = getDayCell(
+                            (Calendar) nextMonthCalendar.clone(),
+                            row,
+                            col,
+                            getCellSize());
+                }
+            }
+        }
+    }
 
     @Override
     protected void onDraw(Canvas canvas) {
