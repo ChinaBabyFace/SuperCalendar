@@ -8,7 +8,6 @@
         <option name="modules">
           <set>
             <option value="$PROJECT_DIR$" />
-            <option value="$PROJECT_DIR$/BabyFrameworkKit" />
             <option value="$PROJECT_DIR$/SuperCalendarLibrary" />
             <option value="$PROJECT_DIR$/app" />
           </set>
@@ -16,7 +15,6 @@
         <option name="myModules">
           <set>
             <option value="$PROJECT_DIR$" />
-            <option value="$PROJECT_DIR$/BabyFrameworkKit" />
             <option value="$PROJECT_DIR$/SuperCalendarLibrary" />
             <option value="$PROJECT_DIR$/app" />
           </set>
